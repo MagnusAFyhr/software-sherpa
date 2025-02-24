@@ -1,0 +1,240 @@
+software_sherpa:
+  enabled: true  # Master toggle for SoftwareSherpa
+  parameters:
+    environment: "dev"
+    project_name: "MyProject"
+    project_description: "MyProject is a project that does something"
+    project_owner: "John Doe"
+    project_repo: "https://github.com/JohnDoe/MyProject"
+    project_license: "License.rtf"
+    project_version: "1.0.0"
+    project_dependencies:
+      - "ProjectA:1.0.0"
+      - "ProjectB:1.0.0"
+
+  development:
+    enabled: true
+    pre_commit:
+      enabled: true
+      type: "pre-commit"
+      command: "pre-commit run --all-files"
+      config:
+        - name: "pre-commit-config.yaml"
+          path: ".pre-commit-config.yaml"
+          repos:
+            - repo: "https://github.com/pre-commit/pre-commit-hooks"
+              rev: "v4.4.0"
+              hooks:
+              - id: check-added-large-files
+              - id: check-merge-conflict
+              - id: end-of-file-fixer
+              - id: no-commit-to-branch
+              - id: trailing-whitespace
+              - id: check-illegal-windows-names
+              - id: mixed-line-ending
+                args: ['--fix', 'crlf']
+            - repo: https://github.com/Yelp/detect-secrets
+              rev: v1.5.0
+              hooks:
+              - id: detect-secrets
+                args: ['--baseline', '.secrets.baseline']
+    build:
+      enabled: true
+      command:
+        msbuild:
+          - command: msbuild target_path build_args
+          - target_path: "bin/Release/{project_name}.sln"
+          - args:
+            - "/p:Configuration=Release"
+            - "/p:Platform=x64"
+            - "/m"
+        nuget:
+          - command: nuget pack target_path package_args
+          - target_path: "{project_name}.nuspec"
+          - args:
+            - "/p:Configuration=Release"
+            - "/p:Platform=x64"
+            - "/m"
+    tests:
+      enabled: true
+      unit_tests:
+        enabled: true
+        command: pytest
+        coverage:
+          enabled: true
+          threshold: 80
+          min_branch_coverage: 100
+          report:
+            enabled: true
+            format: "html"
+            output_path: "coverage.html"
+      integration_tests: # TODO: Implement integration tests
+        enabled: true
+      security_tests: # TODO: Implement security tests
+        enabled: true
+        tools:
+          - snyk
+          - trivy
+    code_quality: # TODO: Implement code quality
+      enabled: true
+      tools:
+        - pylint
+        - black
+        - isort
+
+  ai_assistant:
+    code_review:
+      enabled: true
+      auto_label: true  # Auto-assign labels based on code changes
+      auto_summarize: true  # Automatically generate summary of changes
+      auto_checklist: true  # Automatically generate checklist of changes
+      ai_reviewer: true  # Use AI to review code
+    documentation: # TODO: Implement documentation
+      enabled: true
+      types:
+        project_level: true
+        code_level: true
+        api: true
+        dev_docs: false  # Example of disabling a specific doc type
+      include_files:
+        - "**/*.md"
+        - "**/*.rst"
+        - "**/*.txt"
+        - "**/*.py"
+        - "**/*.js"
+        - "**/*.ts"
+      exclude_files:
+        - "docs/drafts/**"
+        - "**/*.log"
+        - "README.md"
+    code_generation:
+      enabled: true
+      auto_generate: true
+      auto_update: true
+      auto_test: true
+      auto_document: true
+    unit_test_generation:
+      enabled: true
+      auto_generate: true
+      auto_update: true
+      auto_test: true
+      auto_document: true
+
+  cicd: # generates a CI/CD pipeline
+    type: "gitlab"
+    protected_branches:
+      - main
+      - integration
+      - develop
+      - release/*
+    stages:
+      - versioning
+      - build
+        - dependencies
+          - versioning
+      - test
+        - dependencies
+          - versioning
+          - build
+        - artifacts
+          - paths
+            - "coverage.html"
+          - expires_in: 6h
+      - publish
+        - dependencies
+          - versioning
+          - build
+          - test
+      - deploy
+        - dependencies
+          - versioning
+          - build
+          - test
+          - publish
+    versioning: # TODO: Implement versioning
+      enabled: true
+      strategy:
+        - tag: "v{version}"
+        - branches:
+          - main : "v{version}"
+          - develop : "v{version}"
+          - release/{version} : "v{version}"
+    build:
+      enabled: true
+      caching:
+        enabled: true
+        cache_paths:
+          - "packages"
+          - "build/cache"
+          - "node_modules"
+      commands:
+        - msbuild
+        - nuget
+      artifacts:
+        enabled: true
+        groups:
+          binaries:
+            include:
+              - "bin/**/*.exe"
+              - "bin/**/*.dll"
+            exclude:
+              - "bin/temp/**"
+            zip: "binaries.zip"
+            permissions:
+              execute: ["bin/my_app.exe"]
+          cpp:
+            include:
+              - "bin/**/*.cpp"
+              - "bin/**/*.h"
+            exclude:
+              - "bin/temp/**"
+            zip: "{project_name}_cpp_{version}.zip"
+          net:
+            include:
+              - "bin/**/*.dll"
+            exclude:
+              - "bin/temp/**"
+            zip: "{project_name}_net_{version}.zip"
+          src:
+            include:
+              - "src/**/*.cpp"
+              - "src/**/*.h"
+            exclude:
+              - "src/temp/**"
+            zip: "{project_name}_src_{version}.zip"
+          nuget:
+            - "**/*.nupkg"
+    test:
+      enabled: true
+      unit_tests: true
+      integration_tests: true
+      security_tests: true
+      code_quality: true
+      security_scans:
+        enabled: true
+        tool: Snyk
+        schedule: "daily"
+    publish: # TODO: Implement publish
+      enabled: true
+    deploy: # TODO: Implement deploy
+      enabled: true
+      environments:
+        staging:
+          enabled: true
+          auto_deploy: true
+        production:
+          enabled: true
+          manual_approval: true
+          rollback_on_failure: true
+
+  devops:
+    enabled: false
+
+  security:
+    enabled: false
+
+  collaboration:
+    enabled: false
+
+
+# cost, performance, etc.

@@ -1,0 +1,136 @@
+software_sherpa:
+  enabled: true  # Master toggle for SoftwareSherpa
+  parameters:
+    environment: "dev"
+    project_name: "MyProject"
+    project_description: "MyProject is a project that does something"
+    project_owner: "John Doe"
+    project_repo: "https://github.com/JohnDoe/MyProject"
+    project_license: "License.rtf"
+    project_version: "1.0.0"
+    project_dependencies:
+      - "ProjectA:1.0.0"
+      - "ProjectB:1.0.0"
+
+  development:
+    enabled: true
+    pre_commit:
+      enabled: true
+      # TODO: Design pre-commit
+    code_review:
+      enabled: true
+      auto_label: true  # Auto-assign labels based on code changes
+      auto_summarize: true  # Automatically generate summary of changes
+      auto_checklist: true  # Automatically generate checklist of changes
+      ai_reviewer: true  # Use AI to review code
+    documentation: # TODO: Implement documentation
+      enabled: true
+      types:
+        project_level: true
+        code_level: true
+        api: true
+        dev_docs: false  # Example of disabling a specific doc type
+      exclude_files:
+        - "docs/drafts/**"
+        - "**/*.log"
+        - "README.md"
+
+  testing:
+    enabled: true
+    unit_tests:
+      enabled: true
+      auto_generate: true  # Let LLM generate tests
+    integration_tests:
+      enabled: true
+      auto_generate: false
+    security_tests:
+      enabled: true
+      tools:
+        - snyk
+        - trivy
+  cicd:
+    protected_branches:
+      - main
+      - integration
+      - develop
+      - release/*
+    stages:
+      - versioning
+      - build
+      - test
+      - deploy
+      - publish
+    versioning:
+      enabled: true
+      #TODO: Implement versioning
+    build:
+      enabled: true
+      command: msbuild {project_name}.sln
+      build_args:
+        - "/p:Configuration=Release"
+        - "/p:Platform=x64"
+        - "/m"
+        - "/v:detailed"
+      caching:
+        enabled: true
+        cache_paths:
+          - ".nuget/packages"
+          - "build/cache"
+          - "node_modules"
+      artifacts:
+        enabled: true
+        retention_days: 7
+        groups:
+          binaries:
+            include:
+              - "bin/**/*.exe"
+              - "bin/**/*.dll"
+            exclude:
+              - "bin/temp/**"
+            zip: "binaries.zip"
+            retention_days: 10
+            permissions:
+              execute: ["bin/my_app.exe"]
+          cpp: {}
+          net: {}
+          src: {}
+          nuget: {}
+    test:
+      enabled: true
+      unit_tests:
+        enabled: true
+        framework: pytest
+        rules:
+          exclude:
+            - "tests/manual/**"
+      integration_tests:
+        enabled: true
+        framework: postman
+        rules:
+          include:
+            - "api/tests/**"
+      security_scans:
+        enabled: true
+        tool: Snyk
+        schedule: "daily"
+    publish:
+      enabled: true
+    deploy:
+      enabled: true
+      environments:
+        staging:
+          enabled: true
+          auto_deploy: true
+        production:
+          enabled: true
+          manual_approval: true
+          rollback_on_failure: true
+
+  devops:
+    enabled: false
+
+  security:
+    enabled: false
+
+  collaboration:
+    enabled: false
